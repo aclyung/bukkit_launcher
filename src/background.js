@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { app, protocol, BrowserWindow } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
@@ -17,6 +18,7 @@ async function createWindow() {
     webPreferences: {
 
       // Use pluginOptions.nodeIntegration, leave this alone
+      // eslint-disable-next-line max-len
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
