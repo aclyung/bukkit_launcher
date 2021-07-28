@@ -23,6 +23,7 @@
             target="_blank"
           >Discord Community</a>
         </p>
+        <v-btn @click="hi">hi</v-btn>
       </v-col>
 
       <v-col
@@ -32,7 +33,9 @@
         <h2 class="headline font-weight-bold mb-3">
           What's next?
         </h2>
-
+        <div class="box">
+          <div id="terminal"></div>
+        </div>
         <v-row justify="center">
           <a
             v-for="(next, i) in whatsNext"
@@ -92,10 +95,20 @@
 </template>
 
 <script>
+// eslint-disable-next-line import/no-duplicates
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+import 'xterm/css/xterm.css';
+// eslint-disable-next-line import/no-duplicates
+import 'xterm/lib/xterm';
+
+const fs = require('fs');
+
 export default {
   name: 'HelloWorld',
-
   data: () => ({
+    term: '',
+    socket: '',
     ecosystem: [
       {
         text: 'vuetify-loader',
@@ -147,5 +160,75 @@ export default {
       },
     ],
   }),
+  mounted() {
+    const url = 'ws://***********';
+    this.init(url);
+  },
+  methods: {
+    hi() {
+      fs.writeFileSync('./hi.txt', 'helllo');
+    },
+    initXterm() {
+      this.term = new Terminal({
+        rendererType: 'canvas',
+        rows: 35,
+        convertEol: true,
+        scrollback: 10,
+        disableStdin: false,
+        cursorStyle: 'underline',
+        cursorBlink: true,
+        theme: {
+          foreground: 'yellow',
+          background: '#060101',
+          cursor: 'help',
+        },
+      });
+      this.term.open(document.getElementById('terminal'));
+      const fitAddon = new FitAddon();
+      this.term.loadAddon(fitAddon);
+      //  Support input and paste methods
+      const tthis = this;
+      this.term.onData((key) => {
+        const order = ['stdin', key];
+        tthis.socket.onsend(JSON.stringify(order));
+      });
+    },
+    init(url) {
+      //  Instantiate socket
+      this.socket = new WebSocket(url);
+      //  Monitor socket connection
+      this.socket.onopen = this.open;
+      //  Monitor socket error messages
+      this.socket.onerror = this.error;
+      //  Listen for socket messages
+      this.socket.onmessage = this.getMessage;
+      //  Send socket message
+      this.socket.onsend = this.send;
+    },
+    open() {
+      console.log('Socket connection is successful');
+      this.initXterm();
+    },
+    error() {
+      console.log('error in connecting');
+    },
+    close() {
+      this.socket.close();
+      console.log('socket is closed');
+    },
+    getMessage(msg) {
+      this.term.write(JSON.parse(msg.data)[1]);
+    },
+    send(order) {
+      this.socket.send(order);
+    },
+  },
 };
 </script>
+
+<style>
+.box {
+  width: 100%;
+  height: 100%;
+}
+</style>
