@@ -1,9 +1,10 @@
 <template>
   <v-container>
+    <body>
     <v-row class="text-center">
       <v-col cols="12">
         <v-img
-          :src="require('../assets/logo.svg')"
+          :src="require('../assets/getbukkit.png')"
           class="my-3"
           contain
           height="200"
@@ -12,85 +13,18 @@
 
       <v-col class="mb-4">
         <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to Vuetify
+          WELCOME TO <br>BUKKIT LAUNCHER
         </h1>
 
         <p class="subheading font-weight-regular">
           For help and collaboration with other Vuetify developers,
           <br>please join our online
-          <a
-            href="https://community.vuetifyjs.com"
-            target="_blank"
-          >Discord Community</a>
         </p>
         <v-btn @click="hi">hi</v-btn>
       </v-col>
 
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          What's next?
-        </h2>
-        <div class="box">
-          <div id="terminal"></div>
-        </div>
-        <v-row justify="center">
-          <a
-            v-for="(next, i) in whatsNext"
-            :key="i"
-            :href="next.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ next.text }}
-          </a>
-        </v-row>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          Important Links
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(link, i) in importantLinks"
-            :key="i"
-            :href="link.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ link.text }}
-          </a>
-        </v-row>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          Ecosystem
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(eco, i) in ecosystem"
-            :key="i"
-            :href="eco.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ eco.text }}
-          </a>
-        </v-row>
-      </v-col>
     </v-row>
+    </body>
   </v-container>
 </template>
 
@@ -101,64 +35,44 @@ import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 // eslint-disable-next-line import/no-duplicates
 import 'xterm/lib/xterm';
+import './wasm_exec';
+
+// eslint-disable-next-line import/no-extraneous-dependencies
+const { dialog } = require('electron').remote;
 
 const fs = require('fs');
+
+if (!WebAssembly.instantiateStreaming) {
+  WebAssembly.instantiateStreaming = async (resp, importObject) => {
+    const source = await (await resp).arrayBuffer();
+    // eslint-disable-next-line no-return-await
+    return await WebAssembly.instantiate(source, importObject);
+  };
+}
+// eslint-disable-next-line no-undef
+const go = new Go();
+
+let mod;
+let inst;
+WebAssembly.instantiateStreaming(fetch('./getbukkit.wasm'), go.importObject).then((result) => {
+  mod = result.module;
+  inst = result.instance;
+}).catch((err) => {
+  console.error(err);
+});
+
+// eslint-disable-next-line no-unused-vars
+async function run() {
+  console.clear();
+  await go.run(inst);
+  inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
+}
 
 export default {
   name: 'HelloWorld',
   data: () => ({
     term: '',
     socket: '',
-    ecosystem: [
-      {
-        text: 'vuetify-loader',
-        href: 'https://github.com/vuetifyjs/vuetify-loader',
-      },
-      {
-        text: 'github',
-        href: 'https://github.com/vuetifyjs/vuetify',
-      },
-      {
-        text: 'awesome-vuetify',
-        href: 'https://github.com/vuetifyjs/awesome-vuetify',
-      },
-    ],
-    importantLinks: [
-      {
-        text: 'Documentation',
-        href: 'https://vuetifyjs.com',
-      },
-      {
-        text: 'Chat',
-        href: 'https://community.vuetifyjs.com',
-      },
-      {
-        text: 'Made with Vuetify',
-        href: 'https://madewithvuejs.com/vuetify',
-      },
-      {
-        text: 'Twitter',
-        href: 'https://twitter.com/vuetifyjs',
-      },
-      {
-        text: 'Articles',
-        href: 'https://medium.com/vuetify',
-      },
-    ],
-    whatsNext: [
-      {
-        text: 'Explore components',
-        href: 'https://vuetifyjs.com/components/api-explorer',
-      },
-      {
-        text: 'Select a layout',
-        href: 'https://vuetifyjs.com/getting-started/pre-made-layouts',
-      },
-      {
-        text: 'Frequently Asked Questions',
-        href: 'https://vuetifyjs.com/getting-started/frequently-asked-questions',
-      },
-    ],
   }),
   mounted() {
     const url = 'ws://***********';
@@ -166,6 +80,7 @@ export default {
   },
   methods: {
     hi() {
+      dialog.showOpenDialogSync();
       fs.writeFileSync('./hi.txt', 'helllo');
     },
     initXterm() {
