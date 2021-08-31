@@ -15,11 +15,6 @@
         <h1 class="display-2 font-weight-bold mb-3">
           WELCOME TO <br>BUKKIT LAUNCHER
         </h1>
-
-        <p class="subheading font-weight-regular">
-          For help and collaboration with other Vuetify developers,
-          <br>please join our online
-        </p>
         <v-btn @click="hi">hi</v-btn>
       </v-col>
 
